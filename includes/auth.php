@@ -74,4 +74,12 @@ class Auth {
             'id = ' . $userId
         );
     }
+
+    public function updateUser($userId, $data) {
+        return $this->db->update(
+            'users',
+            $data,
+            'id = ' . $userId
+        );
+    }
 }
