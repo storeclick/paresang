@@ -5,10 +5,10 @@ session_start();
 header('Content-Type: text/html; charset=utf-8');
 
 // لود کردن فایل‌های اصلی
-require_once 'config/config.php';
-require_once 'config/database.php';
-require_once 'includes/functions.php';
-require_once 'includes/auth.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/auth.php';
 
 // ایجاد نمونه از کلاس دیتابیس
 $db = Database::getInstance();
