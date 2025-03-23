@@ -20,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $min_quantity = (int)$_POST['min_quantity'];
     $description = sanitize($_POST['description']);
     $status = $_POST['status'] ?? 'inactive';
-    
+    $image = '';
+
     // اعتبارسنجی داده‌ها
     if (empty($name) || empty($code) || empty($sale_price)) {
         $error = 'لطفاً تمام فیلدهای ضروری را پر کنید.';
@@ -79,6 +80,31 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
     <link rel="stylesheet" href="assets/css/products.css">
+    <style>
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .alert {
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="d-flex">
@@ -86,7 +112,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -117,6 +143,9 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                 <?php endif; ?>
 
                 <form method="POST" enctype="multipart/form-data" class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">فرم افزودن محصول</h5>
+                    </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">

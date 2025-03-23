@@ -96,6 +96,9 @@ function createPagination($total, $perPage, $currentPage, $url) {
 
 function uploadImage($file) {
     $targetDir = "uploads/";
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
     $targetFile = $targetDir . basename($file["name"]);
     $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
     $check = getimagesize($file["tmp_name"]);
