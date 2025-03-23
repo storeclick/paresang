@@ -4,12 +4,14 @@ require_once '../includes/init.php';
 // بررسی درخواست Ajax
 if (!isAjax()) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid request']);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['error' => 'درخواست نامعتبر']);
     exit;
 }
 
 $query = sanitize($_GET['query'] ?? '');
 if (empty($query)) {
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode([]);
     exit;
 }
@@ -35,7 +37,7 @@ try {
     ", ["%$query%", "%$query%"]);
 
     $products = $stmt->fetchAll();
-    
+
     // فرمت‌بندی قیمت‌ها و اضافه کردن اطلاعات اضافی
     foreach ($products as &$product) {
         $product['formatted_price'] = number_format($product['price']);
@@ -54,6 +56,7 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'error' => 'خطا در جستجوی محصولات',
         'message' => $e->getMessage()
