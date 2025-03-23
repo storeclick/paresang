@@ -10,7 +10,7 @@ $db = Database::getInstance();
 
 // فیلترها و جستجو
 $search = sanitize($_GET['search'] ?? '');
-$category = (int)($_GET['category'] ?? 0);
+$category_id = (int)($_GET['category'] ?? 0); // تغییر نام متغیر از category به category_id
 $status = $_GET['status'] ?? 'all';
 $sort = $_GET['sort'] ?? 'id_desc';
 $page = max(1, (int)($_GET['page'] ?? 1));
@@ -27,9 +27,9 @@ if ($search) {
     $params[] = "%{$search}%";
 }
 
-if ($category) {
+if ($category_id > 0) { // تغییر شرط
     $where[] = "p.category_id = ?";
-    $params[] = $category;
+    $params[] = $category_id;
 }
 
 if ($status !== 'all') {
@@ -163,9 +163,14 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                             </div>
 
                             <div class="col-md-3">
-                                <select name="category" class="form-select search-category">
-                                    <option value="0">همه دسته‌بندی‌ها</option>
-                                </select>
+                            <select name="category" class="form-select search-category">
+                                <option value="0">همه دسته‌بندی‌ها</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?php echo $cat['id']; ?>" <?php echo ($category_id == $cat['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($cat['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                             </div>
 
                             <div class="col-md-2">
