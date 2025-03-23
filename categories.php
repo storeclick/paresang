@@ -9,7 +9,23 @@ if (!isset($_SESSION['user_id'])) {
 $db = Database::getInstance();
 
 // دریافت لیست دسته‌بندی‌ها
-$categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
+$categories = $db->query("SELECT * FROM categories ORDER BY parent_id, name")->fetchAll();
+
+// تبدیل دسته‌بندی‌ها به ساختار درختی
+function buildTree($categories, $parent_id = 0, $level = 0) {
+    $tree = [];
+    foreach ($categories as $category) {
+        if ($category['parent_id'] == $parent_id) {
+            $category['level'] = $level;
+            $tree[] = $category;
+            $tree = array_merge($tree, buildTree($categories, $category['id'], $level + 1));
+        }
+    }
+    return $tree;
+}
+
+$categoryTree = buildTree($categories);
+
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -21,6 +37,26 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <style>
+        .category-level-0 { font-weight: bold; }
+        .category-level-1 { margin-right: 20px; }
+        .category-level-2 { margin-right: 40px; }
+        .category-level-3 { margin-right: 60px; }
+        .category-name::before {
+            content: "|";
+            margin-left: 10px;
+            color: #ccc;
+        }
+        .category-level-1 .category-name::before {
+            content: "|----- ";
+        }
+        .category-level-2 .category-name::before {
+            content: "|-------- ";
+        }
+        .category-level-3 .category-name::before {
+            content: "|----------- ";
+        }
+    </style>
 </head>
 <body>
     <div class="d-flex">
@@ -28,7 +64,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -53,13 +89,21 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                             <thead>
                                 <tr>
                                     <th>نام دسته‌بندی</th>
+                                    <th>تصویر</th>
                                     <th width="150">عملیات</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($categories as $category): ?>
+                                <?php foreach ($categoryTree as $category): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($category['name']); ?></td>
+                                    <td class="category-level-<?php echo $category['level']; ?>">
+                                        <span class="category-name"><?php echo htmlspecialchars($category['name']); ?></span>
+                                    </td>
+                                    <td>
+                                        <img src="<?php echo !empty($category['image']) ? htmlspecialchars($category['image']) : 'assets/images/default-category.png'; ?>" 
+                                             alt="<?php echo htmlspecialchars($category['name']); ?>" 
+                                             width="50">
+                                    </td>
                                     <td>
                                         <div class="btn-group">
                                             <a href="category-edit.php?id=<?php echo $category['id']; ?>" 
@@ -83,7 +127,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 
                                 <?php if (empty($categories)): ?>
                                 <tr>
-                                    <td colspan="2" class="text-center py-4">
+                                    <td colspan="3" class="text-center py-4">
                                         <div class="text-muted">
                                             <i class="fas fa-box fa-3x mb-3"></i>
                                             <p>هیچ دسته‌بندی یافت نشد!</p>
@@ -125,19 +169,21 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    // فعال‌سازی tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    $(document).ready(function() {
+        // فعال‌سازی tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
-    // مدیریت حذف دسته‌بندی
-    $('.delete-category').click(function() {
-        const id = $(this).data('id');
-        const name = $(this).data('name');
-        $('#categoryId').val(id);
-        $('#categoryName').text(name);
-        $('#deleteModal').modal('show');
+        // مدیریت حذف دسته‌بندی
+        $('.delete-category').click(function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            $('#categoryId').val(id);
+            $('#categoryName').text(name);
+            $('#deleteModal').modal('show');
+        });
     });
     </script>
 </body>

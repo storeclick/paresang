@@ -1,6 +1,1 @@
-تو تب network این خطا ها رو اوورده که اینها وجود ندارن
-
-http://localhost/paresang/assets/css/material-dashboard.css
-http://localhost/paresang/assets/js/material-dashboard.js
-
-لینک این فایلها رو بده تا دانلودون کنم
+خوب حالا صفحه دسته بندی رو درست کن که بتنم به دسته بندی تصویر اضافه بشه و زیر دسته هم داشته باشه حالا ببین چطور میشه اینو بصورت خیلی خیلی پیشرفته درست کرد. تحقیق کن و بهم بگو. 

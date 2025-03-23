@@ -7,26 +7,37 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $db = Database::getInstance();
+
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = sanitize($_POST['name']);
-    
+    $parent_id = (int)$_POST['parent_id'];
+    $image = '';
+
+    // آپلود تصویر
+    if (!empty($_FILES['image']['name'])) {
+        $image = uploadImage($_FILES['image']);
+    }
+
     // اعتبارسنجی داده‌ها
     if (empty($name)) {
         $error = 'لطفاً نام دسته‌بندی را وارد کنید.';
     }
-    
+
     // ثبت دسته‌بندی در دیتابیس
     if (empty($error)) {
-        if ($db->insert('categories', ['name' => $name])) {
+        if ($db->insert('categories', ['name' => $name, 'parent_id' => $parent_id, 'image' => $image])) {
             $success = 'دسته‌بندی جدید با موفقیت ثبت شد.';
         } else {
             $error = 'خطا در ثبت دسته‌بندی. لطفاً دوباره تلاش کنید.';
         }
     }
 }
+
+// دریافت لیست دسته‌بندی‌ها برای انتخاب دسته والد
+$categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -75,11 +86,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                 <?php endif; ?>
 
-                <form method="POST" class="card">
+                <form method="POST" enctype="multipart/form-data" class="card">
                     <div class="card-body">
                         <div class="form-group">
                             <label for="name">نام دسته‌بندی <span class="text-danger">*</span></label>
                             <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="parent_id">دسته والد</label>
+                            <select id="parent_id" name="parent_id" class="form-select">
+                                <option value="0">بدون والد</option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label for="image">تصویر دسته‌بندی</label>
+                            <input type="file" id="image" name="image" class="form-control">
                         </div>
                     </div>
                     

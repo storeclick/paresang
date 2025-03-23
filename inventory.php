@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/init.php';
+require_once 'includes/jdf.php';
 
 // بررسی وضعیت لاگین کاربر
 if (!$auth->isLoggedIn()) {
@@ -10,41 +11,36 @@ if (!$auth->isLoggedIn()) {
 // دریافت لیست محصولات
 $products = $db->query("SELECT * FROM products")->fetchAll();
 
-// اگر درخواست افزودن محصول باشد
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_product'])) {
+// دریافت تراکنش‌های انبار
+$transactions = $db->query("SELECT it.*, p.name as product_name FROM inventory_transactions it LEFT JOIN products p ON it.product_id = p.id ORDER BY it.created_at DESC")->fetchAll();
+
+// اگر درخواست افزودن یا حذف محصول باشد
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['transaction'])) {
     $productId = $_POST['product_id'];
+    $type = $_POST['type'];
     $quantity = $_POST['quantity'];
-    
-    // افزودن محصول به انبار
+    $createdBy = $_SESSION['user_id'];
+
+    // ثبت تراکنش انبار
     $db->insert('inventory_transactions', [
         'product_id' => $productId,
-        'type' => 'in',
+        'type' => $type,
         'quantity' => $quantity,
-        'created_by' => $_SESSION['user_id']
+        'created_by' => $createdBy
     ]);
 
-    flashMessage('محصول با موفقیت به انبار اضافه شد', 'success');
+    // بروزرسانی موجودی محصول
+    if ($type == 'in') {
+        $db->query("UPDATE products SET quantity = quantity + ? WHERE id = ?", [$quantity, $productId]);
+    } else {
+        $db->query("UPDATE products SET quantity = quantity - ? WHERE id = ?", [$quantity, $productId]);
+    }
+
+    flashMessage('تراکنش با موفقیت ثبت شد', 'success');
     header('Location: inventory.php');
     exit;
 }
 
-// اگر درخواست حذف محصول باشد
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_product'])) {
-    $productId = $_POST['product_id'];
-    $quantity = $_POST['quantity'];
-    
-    // حذف محصول از انبار
-    $db->insert('inventory_transactions', [
-        'product_id' => $productId,
-        'type' => 'out',
-        'quantity' => $quantity,
-        'created_by' => $_SESSION['user_id']
-    ]);
-
-    flashMessage('محصول با موفقیت از انبار حذف شد', 'success');
-    header('Location: inventory.php');
-    exit;
-}
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -56,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_product'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.css">
 </head>
 <body>
     <div class="d-flex">
@@ -63,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_product'])) {
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -79,40 +77,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_product'])) {
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
-                                        <h5>افزودن محصول به انبار</h5>
+                                    <div class="col-md-12">
+                                        <h5>ثبت تراکنش انبار</h5>
                                         <form method="post" action="">
                                             <div class="form-group">
                                                 <label for="product_id">محصول</label>
-                                                <select name="product_id" id="product_id" class="form-control">
+                                                <select name="product_id" id="product_id" class="form-select select2">
                                                     <?php foreach ($products as $product): ?>
                                                         <option value="<?php echo $product['id']; ?>"><?php echo $product['name']; ?></option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
-                                            <div class="form-group">
-                                                <label for="quantity">تعداد</label>
-                                                <input type="number" name="quantity" id="quantity" class="form-control" required>
-                                            </div>
-                                            <button type="submit" name="add_product" class="btn btn-primary mt-3">افزودن</button>
-                                        </form>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h5>حذف محصول از انبار</h5>
-                                        <form method="post" action="">
-                                            <div class="form-group">
-                                                <label for="product_id">محصول</label>
-                                                <select name="product_id" id="product_id" class="form-control">
-                                                    <?php foreach ($products as $product): ?>
-                                                        <option value="<?php echo $product['id']; ?>"><?php echo $product['name']; ?></option>
-                                                    <?php endforeach; ?>
+                                            <div class="form-group mt-3">
+                                                <label for="type">نوع تراکنش</label>
+                                                <select name="type" id="type" class="form-select">
+                                                    <option value="in">افزودن به انبار</option>
+                                                    <option value="out">حذف از انبار</option>
                                                 </select>
                                             </div>
-                                            <div class="form-group">
+                                            <div class="form-group mt-3">
                                                 <label for="quantity">تعداد</label>
                                                 <input type="number" name="quantity" id="quantity" class="form-control" required>
                                             </div>
-                                            <button type="submit" name="remove_product" class="btn btn-danger mt-3">حذف</button>
+                                            <button type="submit" name="transaction" class="btn btn-primary mt-3">ثبت تراکنش</button>
                                         </form>
                                     </div>
                                 </div>
@@ -136,6 +123,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_product'])) {
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
+                                <hr>
+                                <h4>تاریخچه تراکنش‌های انبار</h4>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>محصول</th>
+                                            <th>نوع تراکنش</th>
+                                            <th>تعداد</th>
+                                            <th>زمان</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($transactions as $transaction): ?>
+                                            <tr>
+                                                <td><?php echo $transaction['product_name']; ?></td>
+                                                <td><?php echo $transaction['type'] == 'in' ? 'افزودن به انبار' : 'حذف از انبار'; ?></td>
+                                                <td><?php echo $transaction['quantity']; ?></td>
+                                                <td><?php echo jDate::jdate('Y/m/d H:i:s', strtotime($transaction['created_at'])); ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                                <hr>
+                                <h4>نمودار موجودی انبار</h4>
+                                <canvas id="inventoryChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -146,6 +158,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['remove_product'])) {
     </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <script src="assets/js/dashboard.js"></script>
+    <script>
+    $(document).ready(function() {
+        // فعال‌سازی select2 برای انتخاب محصول
+        $('.select2').select2();
+
+        // داده‌های نمودار موجودی انبار
+        var inventoryData = {
+            labels: [<?php foreach ($products as $product) { echo '"' . $product['name'] . '",'; } ?>],
+            datasets: [{
+                label: 'موجودی',
+                data: [<?php foreach ($products as $product) { echo $product['quantity'] . ','; } ?>],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // تنظیمات نمودار موجودی انبار
+        var inventoryChartOptions = {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        };
+
+        // رسم نمودار موجودی انبار
+        var ctx = document.getElementById('inventoryChart').getContext('2d');
+        var inventoryChart = new Chart(ctx, {
+            type: 'bar',
+            data: inventoryData,
+            options: inventoryChartOptions
+        });
+    });
+    </script>
 </body>
 </html>

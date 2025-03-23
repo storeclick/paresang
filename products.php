@@ -21,19 +21,19 @@ $params = [];
 $where = ['1=1'];
 
 if ($search) {
-    $where[] = "(name LIKE ? OR code LIKE ? OR description LIKE ?)";
+    $where[] = "(p.name LIKE ? OR p.code LIKE ? OR p.description LIKE ?)";
     $params[] = "%{$search}%";
     $params[] = "%{$search}%";
     $params[] = "%{$search}%";
 }
 
 if ($category) {
-    $where[] = "category_id = ?";
+    $where[] = "p.category_id = ?";
     $params[] = $category;
 }
 
 if ($status !== 'all') {
-    $where[] = "status = ?";
+    $where[] = "p.status = ?";
     $params[] = $status;
 }
 
@@ -41,19 +41,19 @@ $where = implode(' AND ', $where);
 
 // مرتب‌سازی
 $order_by = match($sort) {
-    'name_asc' => 'name ASC',
-    'name_desc' => 'name DESC',
-    'price_asc' => 'sale_price ASC',
-    'price_desc' => 'sale_price DESC',
-    'stock_asc' => 'quantity ASC',
-    'stock_desc' => 'quantity DESC',
-    'id_asc' => 'id ASC',
-    default => 'id DESC'
+    'name_asc' => 'p.name ASC',
+    'name_desc' => 'p.name DESC',
+    'price_asc' => 'p.sale_price ASC',
+    'price_desc' => 'p.sale_price DESC',
+    'stock_asc' => 'p.quantity ASC',
+    'stock_desc' => 'p.quantity DESC',
+    'id_asc' => 'p.id ASC',
+    default => 'p.id DESC'
 };
 
 // تعداد کل رکوردها
 $total = $db->query(
-    "SELECT COUNT(*) as total FROM products WHERE {$where}",
+    "SELECT COUNT(*) as total FROM products p WHERE {$where}",
     $params
 )->fetch()['total'];
 
