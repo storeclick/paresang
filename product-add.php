@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'customs_tariff_code' => $customs_tariff_code,
             'barcode' => $barcode,
             'store_barcode' => $store_barcode,
-            'image' => $image ?? '',
+            'image' => $image,
             'status' => $status
         ];
         
@@ -77,9 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
-
-// دریافت دسته‌بندی‌ها
-$categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -183,13 +180,8 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="category_id">دسته‌بندی</label>
-                                    <select id="category_id" name="category_id" class="form-select">
+                                    <select id="category_id" name="category_id" class="form-select search-category">
                                         <option value="0">بدون دسته‌بندی</option>
-                                        <?php foreach ($categories as $cat): ?>
-                                            <option value="<?php echo $cat['id']; ?>">
-                                                <?php echo htmlspecialchars($cat['name']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
                                     </select>
                                     <small class="hint-text">دسته‌بندی محصول را انتخاب کنید.</small>
                                 </div>
@@ -298,9 +290,9 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="store_barcode">بارکد فروشگاه</label>
-                                    <input type="text" id="store_barcode" name="store_barcode" class="form-control">
-                                    <button type="button" id="print-barcode" class="btn btn-outline-secondary mt-2">چاپ بارکد</button>
-                                    <small class="hint-text">بارکد فروشگاه را وارد کنید و برای چاپ روی محصول استفاده کنید.</small>
+                                    <input type="text" id="store_barcode" name="store_barcode" class="form-control" readonly>
+                                    <button type="button" id="generate-store-barcode" class="btn btn-outline-secondary mt-2">تولید بارکد فروشگاه</button>
+                                    <small class="hint-text">بارکد فروشگاه برای چاپ روی محصول.</small>
                                 </div>
                             </div>
                         </div>
@@ -319,14 +311,68 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
     <script>
         $(document).ready(function() {
+            $('.search-category').select2({
+                placeholder: 'دسته‌بندی را انتخاب کنید',
+                allowClear: true,
+                ajax: {
+                    url: 'search-categories.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {
+                                    id: item.id,
+                                    text: item.name
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+
             $('#scan-barcode').click(function() {
                 alert('اسکن بارکد محصول برای بروزرسانی بعدی فعال خواهد شد.');
             });
 
-            $('#print-barcode').click(function() {
-                alert('چاپ بارکد برای بروزرسانی بعدی فعال خواهد شد.');
+            $('#generate-store-barcode').click(function() {
+                var category = $('#category_id option:selected').text();
+                if(category) {
+                    $.ajax({
+                        url: 'https://api.mymemory.translated.net/get',
+                        dataType: 'json',
+                        data: {
+                            q: category,
+                            langpair: 'fa|en'
+                        },
+                        success: function(data) {
+                            var translatedText = data.responseData.translatedText;
+                            var prefix = translatedText.replace(/\s+/g, '').substring(0, 5).toLowerCase();
+                            $.ajax({
+                                url: 'generate_barcode.php',
+                                method: 'POST',
+                                data: { prefix: prefix },
+                                success: function(response) {
+                                    var result = JSON.parse(response);
+                                    var barcode = result.barcode;
+                                    $('#store_barcode').val(barcode);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    alert('لطفاً دسته‌بندی را انتخاب کنید.');
+                }
             });
         });
     </script>
