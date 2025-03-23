@@ -3,8 +3,7 @@ $(document).ready(function () {
         var target = $(this).attr('href');
         $(target).collapse('toggle');
     });
-});
-
+    
     // Dropdown menu
     $('.dropdown-toggle').on('click', function(e) {
         e.preventDefault();
