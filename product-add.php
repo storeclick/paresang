@@ -20,6 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $min_quantity = (int)$_POST['min_quantity'];
     $description = sanitize($_POST['description']);
     $status = $_POST['status'] ?? 'inactive';
+    $brand = sanitize($_POST['brand']);
+    $model = sanitize($_POST['model']);
+    $technical_features = sanitize($_POST['technical_features']);
+    $customs_tariff_code = sanitize($_POST['customs_tariff_code']);
+    $barcode = sanitize($_POST['barcode']);
+    $store_barcode = sanitize($_POST['store_barcode']);
     $image = '';
 
     // اعتبارسنجی داده‌ها
@@ -54,6 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'quantity' => $quantity,
             'min_quantity' => $min_quantity,
             'description' => $description,
+            'brand' => $brand,
+            'model' => $model,
+            'technical_features' => $technical_features,
+            'customs_tariff_code' => $customs_tariff_code,
+            'barcode' => $barcode,
+            'store_barcode' => $store_barcode,
             'image' => $image ?? '',
             'status' => $status
         ];
@@ -104,6 +116,10 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
         .alert {
             border-radius: 8px;
         }
+        .hint-text {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -152,6 +168,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="name">نام محصول <span class="text-danger">*</span></label>
                                     <input type="text" id="name" name="name" class="form-control" required>
+                                    <small class="hint-text">مثال: لپ‌تاپ</small>
                                 </div>
                             </div>
                             
@@ -159,6 +176,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="code">کد محصول <span class="text-danger">*</span></label>
                                     <input type="text" id="code" name="code" class="form-control" required>
+                                    <small class="hint-text">مثال: LP-12345</small>
                                 </div>
                             </div>
                             
@@ -173,6 +191,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <small class="hint-text">دسته‌بندی محصول را انتخاب کنید.</small>
                                 </div>
                             </div>
                             
@@ -180,6 +199,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="purchase_price">قیمت خرید</label>
                                     <input type="text" id="purchase_price" name="purchase_price" class="form-control">
+                                    <small class="hint-text">مثال: 5000000</small>
                                 </div>
                             </div>
                             
@@ -187,6 +207,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="sale_price">قیمت فروش <span class="text-danger">*</span></label>
                                     <input type="text" id="sale_price" name="sale_price" class="form-control" required>
+                                    <small class="hint-text">مثال: 6000000</small>
                                 </div>
                             </div>
                             
@@ -194,6 +215,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="quantity">موجودی</label>
                                     <input type="text" id="quantity" name="quantity" class="form-control">
+                                    <small class="hint-text">مثال: 50</small>
                                 </div>
                             </div>
                             
@@ -201,6 +223,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="min_quantity">حداقل موجودی</label>
                                     <input type="text" id="min_quantity" name="min_quantity" class="form-control">
+                                    <small class="hint-text">مثال: 10</small>
                                 </div>
                             </div>
                             
@@ -208,6 +231,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="description">توضیحات</label>
                                     <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+                                    <small class="hint-text">توضیحات تکمیلی درباره محصول.</small>
                                 </div>
                             </div>
                             
@@ -215,6 +239,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                 <div class="form-group">
                                     <label for="image">تصویر محصول</label>
                                     <input type="file" id="image" name="image" class="form-control">
+                                    <small class="hint-text">فرمت‌های مجاز: JPG, PNG</small>
                                 </div>
                             </div>
                             
@@ -225,6 +250,57 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                                         <option value="active">فعال</option>
                                         <option value="inactive">غیرفعال</option>
                                     </select>
+                                    <small class="hint-text">وضعیت محصول را انتخاب کنید.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="brand">برند</label>
+                                    <input type="text" id="brand" name="brand" class="form-control">
+                                    <small class="hint-text">مثال: Apple</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="model">مدل</label>
+                                    <input type="text" id="model" name="model" class="form-control">
+                                    <small class="hint-text">مثال: MacBook Pro 2021</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="technical_features">ویژگی‌های فنی</label>
+                                    <textarea id="technical_features" name="technical_features" class="form-control" rows="4"></textarea>
+                                    <small class="hint-text">ویژگی‌های فنی محصول را وارد کنید.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="customs_tariff_code">کد تعرفه گمرکی</label>
+                                    <input type="text" id="customs_tariff_code" name="customs_tariff_code" class="form-control">
+                                    <small class="hint-text">در صورت وارداتی بودن، کد تعرفه گمرکی محصول را وارد کنید.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="barcode">بارکد محصول</label>
+                                    <input type="text" id="barcode" name="barcode" class="form-control">
+                                    <button type="button" id="scan-barcode" class="btn btn-outline-secondary mt-2">اسکن بارکد</button>
+                                    <small class="hint-text">بارکد محصول را وارد کنید یا از بارکدخوان استفاده کنید.</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="store_barcode">بارکد فروشگاه</label>
+                                    <input type="text" id="store_barcode" name="store_barcode" class="form-control">
+                                    <button type="button" id="print-barcode" class="btn btn-outline-secondary mt-2">چاپ بارکد</button>
+                                    <small class="hint-text">بارکد فروشگاه را وارد کنید و برای چاپ روی محصول استفاده کنید.</small>
                                 </div>
                             </div>
                         </div>
@@ -243,5 +319,16 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#scan-barcode').click(function() {
+                alert('اسکن بارکد محصول برای بروزرسانی بعدی فعال خواهد شد.');
+            });
+
+            $('#print-barcode').click(function() {
+                alert('چاپ بارکد برای بروزرسانی بعدی فعال خواهد شد.');
+            });
+        });
+    </script>
 </body>
 </html>
