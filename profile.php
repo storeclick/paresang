@@ -40,13 +40,13 @@ $user = $auth->getCurrentUser();
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label class="bmd-label-floating">نام کاربری</label>
-                                                    <input type="text" class="form-control" disabled value="<?php echo htmlspecialchars($user['username']); ?>">
+                                                    <input type="text" class="form-control" disabled value="<?php echo htmlspecialchars($user['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="bmd-label-floating">ایمیل</label>
-                                                    <input type="email" class="form-control" disabled value="<?php echo htmlspecialchars($user['email']); ?>">
+                                                    <input type="email" class="form-control" disabled value="<?php echo htmlspecialchars($user['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -54,13 +54,13 @@ $user = $auth->getCurrentUser();
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label class="bmd-label-floating">نام</label>
-                                                    <input type="text" class="form-control" disabled value="<?php echo htmlspecialchars($user['first_name']); ?>">
+                                                    <input type="text" class="form-control" disabled value="<?php echo htmlspecialchars($user['first_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label class="bmd-label-floating">نام خانوادگی</label>
-                                                    <input type="text" class="form-control" disabled value="<?php echo htmlspecialchars($user['last_name']); ?>">
+                                                    <input type="text" class="form-control" disabled value="<?php echo htmlspecialchars($user['last_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -78,8 +78,8 @@ $user = $auth->getCurrentUser();
                                     </a>
                                 </div>
                                 <div class="card-body">
-                                    <h6 class="card-category text-gray"><?php echo htmlspecialchars($user['role']); ?></h6>
-                                    <h4 class="card-title"><?php echo htmlspecialchars($user['full_name']); ?></h4>
+                                    <h6 class="card-category text-gray"><?php echo htmlspecialchars($user['role'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h6>
+                                    <h4 class="card-title"><?php echo htmlspecialchars($user['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h4>
                                     <p class="card-description">
                                         توضیحاتی درباره کاربر
                                     </p>
