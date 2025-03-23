@@ -34,8 +34,8 @@ $settings = $db->query("SELECT * FROM settings")->fetchAll();
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="form-group">
-                                                        <label class="bmd-label-floating"><?php echo htmlspecialchars($setting['name']); ?></label>
-                                                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($setting['value']); ?>">
+                                                        <label class="bmd-label-floating"><?php echo htmlspecialchars($setting['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></label>
+                                                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($setting['value'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                                                     </div>
                                                 </div>
                                             </div>
