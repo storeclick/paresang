@@ -32,17 +32,34 @@ try {
         WHERE 
             (p.name LIKE ? OR p.code LIKE ?)
             AND p.status = 'active'
-            AND p.deleted_at IS NULL
         ORDER BY p.name ASC
         LIMIT 10
     ", ["%$query%", "%$query%"]);
 
     $products = $stmt->fetchAll();
+    
+    // بررسی نتایج
+    if (empty($products)) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([]);
+        exit;
+    }
 
     // فرمت‌بندی قیمت‌ها و اضافه کردن اطلاعات اضافی
     foreach ($products as &$product) {
-        $product['formatted_price'] = number_format($product['price']);
-        $product['stock_status'] = $product['stock'] > 0 ? 'موجود' : 'ناموجود';
+        // قیمت فروش
+        $product['formatted_price'] = number_format($product['price']) . ' تومان';
+        
+        // وضعیت موجودی
+        if ($product['stock'] > 0) {
+            $product['stock_status'] = 'موجود';
+            $product['stock_class'] = 'text-success';
+        } else {
+            $product['stock_status'] = 'ناموجود';
+            $product['stock_class'] = 'text-danger';
+        }
+        
+        // متن نمایشی
         $product['display_text'] = $product['name'];
         
         // اضافه کردن کد محصول
@@ -55,29 +72,22 @@ try {
             $product['display_text'] .= " - {$product['category_name']}";
         }
         
-        // اضافه کردن واحد
-        if (!empty($product['unit'])) {
-            $product['unit_text'] = $product['unit'];
-        } else {
-            $product['unit_text'] = 'عدد';
-        }
+        // واحد شمارش
+        $product['unit_text'] = !empty($product['unit']) ? $product['unit'] : 'عدد';
         
-        // اضافه کردن وضعیت موجودی با جزئیات بیشتر
-        if ($product['stock'] > 0) {
-            $product['stock_label'] = "<span class='text-success'>موجود ({$product['stock']} {$product['unit_text']})</span>";
-        } else {
-            $product['stock_label'] = "<span class='text-danger'>ناموجود</span>";
-        }
+        // اطلاعات کامل موجودی
+        $product['stock_info'] = sprintf('%d %s', $product['stock'], $product['unit_text']);
     }
 
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($products, JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
+    error_log($e->getMessage());
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'error' => 'خطا در جستجوی محصولات',
-        'message' => $e->getMessage()
+        'message' => 'خطایی در سیستم رخ داده است. لطفاً دوباره تلاش کنید.'
     ]);
 }
