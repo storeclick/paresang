@@ -3,7 +3,7 @@ $(document).ready(function() {
 
     // افزودن آیتم جدید
     $('#add-item').click(function() {
-        let newItem = `<div class="invoice-item">
+        let newItem = `<div class="invoice-item" data-index="${itemIndex}">
             <input type="text" name="items[${itemIndex}][product_search]" class="form-control product-search" placeholder="جستجوی محصول" required>
             <input type="hidden" name="items[${itemIndex}][product_id]" class="form-control product-id">
             <input type="number" name="items[${itemIndex}][quantity]" class="form-control" placeholder="تعداد" required>
