@@ -1,0 +1,51 @@
+Folder PATH listing
+Volume serial number is 000001DD 1A06:CD02
+C:.
+|   .gitattributes
+|   dashboard.php
+|   delete-product.php
+|   index.php
+|   list.txt
+|   list_tree.sh
+|   login.php
+|   product-add.php
+|   product-edit.php
+|   products.php
+|   README.md
+|   register.php
+|   
++---ajax
+|       get-sales-data.php
+|       
++---assets
+|   +---css
+|   |       charts.min.css
+|   |       dashboard.css
+|   |       fontiran.css
+|   |       landing.css
+|   |       login.css
+|   |       products.css
+|   |       register.css
+|   |       style.css
+|   |       
+|   +---fonts
+|   +---images
+|   \---js
+|           main.js
+|           
++---config
+|       config.php
+|       database.php
+|       
++---database
+|       schema.sql
+|       
+\---includes
+        auth.php
+        footer.php
+        functions.php
+        header.php
+        init.php
+        navbar.php
+        sidebar.php
+        
