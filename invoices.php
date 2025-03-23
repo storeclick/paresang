@@ -7,8 +7,7 @@ if (!$auth->isLoggedIn()) {
     exit;
 }
 
-// دریافت لیست محصولات و مشتریان
-$products = $db->query("SELECT * FROM products")->fetchAll();
+// دریافت لیست مشتریان
 $customers = $db->query("SELECT * FROM customers")->fetchAll();
 
 // اگر درخواست ایجاد فاکتور باشد
@@ -75,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-items: center;
             margin-bottom: 10px;
         }
-        .invoice-item input {
+        .invoice-item input, .invoice-item select {
             max-width: 150px;
         }
         .invoice-item .remove-item {
@@ -90,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -110,7 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         <label for="customer_id">انتخاب مشتری</label>
                                         <select name="customer_id" id="customer_id" class="form-control">
                                             <?php foreach ($customers as $customer): ?>
-                                                <option value="<?php echo $customer['id']; ?>"><?php echo $customer['name']; ?></option>
+                                                <?php if (isset($customer['name'])): ?>
+                                                    <option value="<?php echo $customer['id']; ?>"><?php echo $customer['name']; ?></option>
+                                                <?php else: ?>
+                                                    <option value="<?php echo $customer['id']; ?>">بدون نام</option>
+                                                <?php endif; ?>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -126,11 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <h5>افزودن آیتم‌ها به فاکتور</h5>
                                     <div id="invoice-items">
                                         <div class="invoice-item">
-                                            <select name="items[0][product_id]" class="form-control">
-                                                <?php foreach ($products as $product): ?>
-                                                    <option value="<?php echo $product['id']; ?>"><?php echo $product['name']; ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                            <input type="text" name="items[0][product_search]" class="form-control product-search" placeholder="جستجوی محصول" required>
+                                            <input type="hidden" name="items[0][product_id]" class="form-control product-id">
                                             <input type="number" name="items[0][quantity]" class="form-control" placeholder="تعداد" required>
                                             <input type="number" name="items[0][price]" class="form-control" placeholder="قیمت" required>
                                             <span class="remove-item">&times;</span>
@@ -154,13 +154,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script>
         $(document).ready(function() {
             let itemIndex = 1;
+
+            // افزودن آیتم جدید
             $('#add-item').click(function() {
                 let newItem = `<div class="invoice-item">
-                    <select name="items[${itemIndex}][product_id]" class="form-control">
-                        <?php foreach ($products as $product): ?>
-                            <option value="<?php echo $product['id']; ?>"><?php echo $product['name']; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="text" name="items[${itemIndex}][product_search]" class="form-control product-search" placeholder="جستجوی محصول" required>
+                    <input type="hidden" name="items[${itemIndex}][product_id]" class="form-control product-id">
                     <input type="number" name="items[${itemIndex}][quantity]" class="form-control" placeholder="تعداد" required>
                     <input type="number" name="items[${itemIndex}][price]" class="form-control" placeholder="قیمت" required>
                     <span class="remove-item">&times;</span>
@@ -169,8 +168,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 itemIndex++;
             });
 
+            // حذف آیتم
             $(document).on('click', '.remove-item', function() {
                 $(this).closest('.invoice-item').remove();
+            });
+
+            // جستجوی محصول
+            $(document).on('input', '.product-search', function() {
+                let searchInput = $(this);
+                let query = searchInput.val();
+                if (query.length > 2) {
+                    $.ajax({
+                        url: 'ajax/search-products.php',
+                        method: 'GET',
+                        data: { query: query },
+                        success: function(response) {
+                            let products = JSON.parse(response);
+                            let dropdown = $('<ul class="dropdown-menu" style="display:block; position:absolute;"></ul>');
+                            products.forEach(product => {
+                                dropdown.append(`<li><a href="#" class="dropdown-item" data-id="${product.id}" data-name="${product.name}">${product.name}</a></li>`);
+                            });
+                            searchInput.after(dropdown);
+                        }
+                    });
+                }
+            });
+
+            // انتخاب محصول از جستجو
+            $(document).on('click', '.dropdown-item', function(e) {
+                e.preventDefault();
+                let selectedProduct = $(this);
+                let searchInput = selectedProduct.closest('.invoice-item').find('.product-search');
+                let productIdInput = selectedProduct.closest('.invoice-item').find('.product-id');
+                searchInput.val(selectedProduct.data('name'));
+                productIdInput.val(selectedProduct.data('id'));
+                $('.dropdown-menu').remove();
+            });
+
+            // بستن منوی جستجو در کلیک خارج از آن
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.product-search').length) {
+                    $('.dropdown-menu').remove();
+                }
             });
         });
     </script>
