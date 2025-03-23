@@ -64,7 +64,7 @@ $recentInvoices = $db->query(
     <link href="assets/css/fontiran.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/charts.css@1.1.0/dist/charts.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 <body>
