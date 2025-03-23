@@ -81,6 +81,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: red;
             cursor: pointer;
         }
+        .product-search-results {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+}
+
+.search-item {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.search-item:hover {
+    background-color: #f5f5f5;
+}
     </style>
 </head>
 <body>
@@ -174,25 +195,93 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             });
 
             // جستجوی محصول
-            $(document).on('input', '.product-search', function() {
-                let searchInput = $(this);
-                let query = searchInput.val();
-                if (query.length > 2) {
-                    $.ajax({
-                        url: 'ajax/search-products.php',
-                        method: 'GET',
-                        data: { query: query },
-                        success: function(response) {
-                            let products = JSON.parse(response);
-                            let dropdown = $('<ul class="dropdown-menu" style="display:block; position:absolute;"></ul>');
-                            products.forEach(product => {
-                                dropdown.append(`<li><a href="#" class="dropdown-item" data-id="${product.id}" data-name="${product.name}">${product.name}</a></li>`);
-                            });
-                            searchInput.after(dropdown);
-                        }
+$(document).on('input', '.product-search', function() {
+    let searchInput = $(this);
+    let productRow = searchInput.closest('.invoice-item');
+    let query = searchInput.val();
+    
+    // حذف منوی قبلی اگر وجود داشته باشد
+    productRow.find('.product-search-results').remove();
+    
+    if (query.length >= 2) {
+        $.ajax({
+            url: 'ajax/search-products.php',
+            method: 'GET',
+            data: { query: query },
+            success: function(response) {
+                // ایجاد منوی نتایج جستجو
+                let results = $('<div class="product-search-results"></div>');
+                results.css({
+                    'position': 'absolute',
+                    'z-index': '1000',
+                    'background': '#fff',
+                    'width': searchInput.outerWidth() + 'px',
+                    'max-height': '200px',
+                    'overflow-y': 'auto',
+                    'border': '1px solid #ddd',
+                    'border-radius': '4px',
+                    'box-shadow': '0 2px 4px rgba(0,0,0,0.1)',
+                    'margin-top': '2px'
+                });
+
+                if (Array.isArray(response) && response.length > 0) {
+                    response.forEach(function(product) {
+                        let item = $('<div class="search-item"></div>');
+                        item.css({
+                            'padding': '8px 12px',
+                            'cursor': 'pointer',
+                            'border-bottom': '1px solid #eee'
+                        });
+                        
+                        item.html(`
+                            <div style="font-weight: bold;">${product.display_text}</div>
+                            <div style="font-size: 0.9em; color: #666;">
+                                قیمت: ${product.formatted_price} تومان | 
+                                موجودی: ${product.stock_status}
+                            </div>
+                        `);
+
+                        item.hover(
+                            function() { $(this).css('background-color', '#f5f5f5'); },
+                            function() { $(this).css('background-color', '#fff'); }
+                        );
+
+                        item.on('click', function() {
+                            searchInput.val(product.display_text);
+                            productRow.find('.product-id').val(product.id);
+                            productRow.find('[name$="[price]"]').val(product.price);
+                            let quantityInput = productRow.find('[name$="[quantity]"]');
+                            if (product.stock > 0) {
+                                quantityInput.attr('max', product.stock);
+                                quantityInput.prop('disabled', false);
+                            } else {
+                                quantityInput.prop('disabled', true);
+                            }
+                            results.remove();
+                        });
+
+                        results.append(item);
                     });
+                } else {
+                    results.append('<div class="p-3 text-muted">محصولی یافت نشد</div>');
                 }
-            });
+
+                searchInput.after(results);
+            },
+            error: function(xhr, status, error) {
+                console.error('خطا در جستجوی محصول:', error);
+                alert('خطا در جستجوی محصول. لطفاً دوباره تلاش کنید.');
+            }
+        });
+    }
+});
+
+// بستن منوی جستجو در کلیک خارج از آن
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.invoice-item').length) {
+        $('.product-search-results').remove();
+    }
+});
 
             // انتخاب محصول از جستجو
             $(document).on('click', '.dropdown-item', function(e) {
