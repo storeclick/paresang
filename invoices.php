@@ -10,13 +10,14 @@ if (!$auth->isLoggedIn()) {
 // دریافت لیست مشتریان با اطلاعات بیشتر
 $customers = $db->query("
     SELECT c.*, 
+           CONCAT(c.first_name, ' ', c.last_name) as name,
            COUNT(i.id) as total_invoices,
            COALESCE(SUM(i.final_amount), 0) as total_purchases
     FROM customers c
     LEFT JOIN invoices i ON c.id = i.customer_id
     WHERE c.deleted_at IS NULL
     GROUP BY c.id
-    ORDER BY c.name ASC
+    ORDER BY c.first_name ASC, c.last_name ASC
 ")->fetchAll();
 
 // دریافت تنظیمات پیش‌فرض فاکتور
@@ -222,14 +223,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                                     <option value="">انتخاب کنید</option>
                                                     <?php foreach ($customers as $customer): ?>
                                                         <option value="<?php echo $customer['id']; ?>" data-info="<?php echo htmlspecialchars(json_encode([
-                                                            'total_invoices' => $customer['total_invoices'],
-                                                            'total_purchases' => number_format($customer['total_purchases'])
-                                                        ])); ?>">
-                                                            <?php echo htmlspecialchars($customer['name']); ?>
-                                                            <?php if (!empty($customer['company'])): ?>
-                                                                (<?php echo htmlspecialchars($customer['company']); ?>)
-                                                            <?php endif; ?>
-                                                        </option>
+    'total_invoices' => $customer['total_invoices'],
+    'total_purchases' => number_format($customer['total_purchases'])
+])); ?>">
+    <?php echo htmlspecialchars($customer['name']); ?>
+    <?php if (!empty($customer['company'])): ?>
+        (<?php echo htmlspecialchars($customer['company']); ?>)
+    <?php endif; ?>
+</option>
                                                     <?php endforeach; ?>
                                                 </select>
                                                 <div id="customer-info" class="mt-2 small text-muted d-none">
