@@ -14,6 +14,7 @@ $customers = $db->query("
            COALESCE(SUM(i.final_amount), 0) as total_purchases
     FROM customers c
     LEFT JOIN invoices i ON c.id = i.customer_id
+    WHERE c.deleted_at IS NULL
     GROUP BY c.id
     ORDER BY c.name ASC
 ")->fetchAll();

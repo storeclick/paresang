@@ -21,16 +21,19 @@ try {
     $db = Database::getInstance();
     $stmt = $db->prepare("
         SELECT 
-            id,
-            name,
-            price,
-            stock,
-            sku
-        FROM products 
+            p.id,
+            p.name,
+            p.code,
+            p.price,
+            p.quantity as stock,
+            c.name as category_name
+        FROM products p
+        LEFT JOIN categories c ON p.category_id = c.id
         WHERE 
-            (name LIKE :query OR sku LIKE :query)
-            AND active = 1 
-            AND deleted_at IS NULL
+            (p.name LIKE :query OR p.code LIKE :query)
+            AND p.active = 1 
+            AND p.deleted_at IS NULL
+        ORDER BY p.name ASC
         LIMIT 10
     ");
 
@@ -42,13 +45,22 @@ try {
     foreach ($products as &$product) {
         $product['formatted_price'] = number_format($product['price']) . ' تومان';
         $product['stock_status'] = $product['stock'] > 0 ? 'موجود' : 'ناموجود';
-        $product['display_text'] = "{$product['name']} (کد: {$product['sku']}) - {$product['formatted_price']}";
+        $product['display_text'] = $product['name'];
+        if (!empty($product['code'])) {
+            $product['display_text'] .= " (کد: {$product['code']})";
+        }
+        if (!empty($product['category_name'])) {
+            $product['display_text'] .= " - {$product['category_name']}";
+        }
     }
 
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($products);
+    echo json_encode($products, JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'خطا در جستجوی محصولات']);
+    echo json_encode([
+        'error' => 'خطا در جستجوی محصولات',
+        'message' => $e->getMessage()
+    ]);
 }
