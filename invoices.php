@@ -20,9 +20,8 @@ $customers = $db->query("
 ")->fetchAll();
 
 // دریافت تنظیمات پیش‌فرض فاکتور
-$settings = $db->query("SELECT * FROM settings WHERE category = 'invoice' LIMIT 1")->fetch();
-$default_tax_rate = $settings['default_tax_rate'] ?? 9;
-
+$settings = $db->query("SELECT * FROM settings WHERE type = 'invoice' AND name = 'default_tax_rate' LIMIT 1")->fetch();
+$default_tax_rate = $settings['value'] ?? 9;
 // اگر درخواست ایجاد فاکتور باشد
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {

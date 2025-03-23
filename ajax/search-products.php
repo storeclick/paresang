@@ -1,25 +1,21 @@
 <?php
 require_once '../includes/init.php';
 
-// بررسی لاگین بودن کاربر
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
+if (!isAjax()) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid request']);
     exit;
 }
 
-// دریافت و تمیز کردن داده‌های جستجو
-$query = trim($_GET['query'] ?? '');
-
+$query = sanitize($_GET['query'] ?? '');
 if (empty($query)) {
     echo json_encode([]);
     exit;
 }
 
 try {
-    // جستجوی محصولات
     $db = Database::getInstance();
-    $stmt = $db->prepare("
+    $stmt = $db->query("
         SELECT 
             p.id,
             p.name,
@@ -30,20 +26,18 @@ try {
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         WHERE 
-            (p.name LIKE :query OR p.code LIKE :query)
-            AND p.active = 1 
+            (p.name LIKE ? OR p.code LIKE ?)
+            AND p.status = 'active'
             AND p.deleted_at IS NULL
         ORDER BY p.name ASC
         LIMIT 10
-    ");
+    ", ["%$query%", "%$query%"]);
 
-    $searchTerm = '%' . $query . '%';
-    $stmt->execute(['query' => $searchTerm]);
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $products = $stmt->fetchAll();
 
     // فرمت‌بندی قیمت‌ها و اضافه کردن اطلاعات اضافی
     foreach ($products as &$product) {
-        $product['formatted_price'] = number_format($product['price']) . ' تومان';
+        $product['formatted_price'] = number_format($product['price']);
         $product['stock_status'] = $product['stock'] > 0 ? 'موجود' : 'ناموجود';
         $product['display_text'] = $product['name'];
         if (!empty($product['code'])) {
