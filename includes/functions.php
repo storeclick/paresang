@@ -106,3 +106,26 @@ function uploadImage($file) {
     }
     return false;
 }
+
+function logActivity($userId, $action) {
+    global $db;
+    $db->insert('activity_log', [
+        'user_id' => $userId,
+        'action' => $action,
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
+}
+
+function getLowStockProducts() {
+    global $db;
+    return $db->query("SELECT * FROM products WHERE quantity <= min_quantity AND status = 'active'")->fetchAll();
+}
+
+function getUserRole($userId) {
+    global $db;
+    return $db->query("SELECT role FROM users WHERE id = ?", [$userId])->fetchColumn();
+}
+
+function formatCurrency($number) {
+    return number_format($number, 0, '.', ',') . ' تومان';
+}

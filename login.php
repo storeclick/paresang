@@ -18,10 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         if ($auth->login($username, $password)) {
             // ذخیره آخرین زمان ورود
-            $db->update('users', 
-                ['last_login' => date('Y-m-d H:i:s')], 
-                'id = ' . $_SESSION['user_id']
-            );
+            $db = Database::getInstance();
+            $db->query("UPDATE users SET last_login = NOW() WHERE id = ?", [$_SESSION['user_id']]);
             
             redirect('dashboard.php');
         } else {

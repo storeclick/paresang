@@ -11,6 +11,7 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE,
     role ENUM('admin', 'user') DEFAULT 'user',
     status ENUM('active', 'inactive') DEFAULT 'active',
+    last_login DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;

@@ -22,3 +22,8 @@ if (!isset($_SESSION['user_id']) && !in_array(basename($_SERVER['PHP_SELF']), ['
     header('Location: login.php');
     exit;
 }
+
+// مقداردهی متغیرهای مورد نیاز
+$auth = new Auth();
+$user = $auth->getCurrentUser();
+$lowStock = $db->query("SELECT COUNT(*) as total FROM products WHERE quantity <= min_quantity AND status = 'active'")->fetch()['total'];

@@ -41,11 +41,11 @@
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                     <img src="<?php echo empty($user['avatar']) ? 'assets/images/default-avatar.png' : $user['avatar']; ?>" 
-                         alt="<?php echo htmlspecialchars($user['full_name']); ?>" 
+                         alt="<?php echo htmlspecialchars($user['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" 
                          class="rounded-circle" 
                          width="32">
                     <span class="d-none d-lg-inline ms-2">
-                        <?php echo htmlspecialchars($user['full_name']); ?>
+                        <?php echo htmlspecialchars($user['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                     </span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end">

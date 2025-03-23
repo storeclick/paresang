@@ -1,6 +1,6 @@
 </div> <!-- End of container-fluid -->
         </div> <!-- End of main-content -->
-    </div> <!-- End of d-flex -->
+    </div> <!-- End of د-flex -->
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
