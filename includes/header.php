@@ -1,24 +1,20 @@
-<?php
-session_start();
-?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سیستم حسابداری پاره سنگ</title>
-    
-    <!-- فونت ایران سنس -->
+    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' . SITE_NAME : SITE_NAME; ?></title>
     <link href="assets/css/fontiran.css" rel="stylesheet">
-    
-    <!-- Bootstrap RTL -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <?php
+    if (isset($customCss) && is_array($customCss)) {
+        foreach ($customCss as $cssFile) {
+            echo '<link rel="stylesheet" href="' . $cssFile . '">';
+        }
+    }
+    ?>
 </head>
 <body>
     <div class="d-flex">

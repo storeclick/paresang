@@ -1,9 +1,9 @@
-$(document).ready(function() {
-    // Sidebar toggle
-    $('.sidebar-toggle').on('click', function() {
-        $('.sidebar').toggleClass('active');
-        $('.main-content').toggleClass('active');
+$(document).ready(function () {
+    $('[data-bs-toggle="collapse"]').on('click', function () {
+        var target = $(this).attr('href');
+        $(target).collapse('toggle');
     });
+});
 
     // Dropdown menu
     $('.dropdown-toggle').on('click', function(e) {

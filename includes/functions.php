@@ -93,3 +93,16 @@ function createPagination($total, $perPage, $currentPage, $url) {
     
     return $html;
 }
+
+function uploadImage($file) {
+    $targetDir = "uploads/";
+    $targetFile = $targetDir . basename($file["name"]);
+    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+    $check = getimagesize($file["tmp_name"]);
+    if ($check !== false) {
+        if (move_uploaded_file($file["tmp_name"], $targetFile)) {
+            return $targetFile;
+        }
+    }
+    return false;
+}
