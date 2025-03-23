@@ -1,54 +1,63 @@
 <?php
 require_once 'includes/init.php';
 
-$settings = $db->query("SELECT * FROM settings")->fetchAll();
+// بررسی وضعیت لاگین کاربر
+if (!$auth->isLoggedIn()) {
+    header('Location: login.php');
+    exit;
+}
 
+// دریافت تنظیمات فعلی
+$settings = $db->get('settings', '*', ['id' => 1]);
+
+// ذخیره تنظیمات
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // جمع‌آوری داده‌های فرم
-    $companyName = $_POST['company_name'];
-    $address = $_POST['address'];
-    $phone = $_POST['phone'];
-    $email = $_POST['email'];
-    $currency = $_POST['currency'];
-    $taxRate = $_POST['tax_rate'];
-    $discountRate = $_POST['discount_rate'];
-    $invoiceTemplate = $_POST['invoice_template'];
-    $smtpServer = $_POST['smtp_server'];
-    $smtpPort = $_POST['smtp_port'];
-    $smtpUsername = $_POST['smtp_username'];
-    $smtpPassword = $_POST['smtp_password'];
+    $organization_name = $_POST['organization_name'];
+    $organization_address = $_POST['organization_address'];
+    $organization_phone = $_POST['organization_phone'];
+    $organization_email = $_POST['organization_email'];
+    $organization_logo = ''; // فرض می‌کنیم که تصویر به صورت URL ذخیره می‌شود
 
-    // به‌روزرسانی تنظیمات در دیتابیس
+    // آپلود لوگو
+    if (isset($_FILES['organization_logo']) && $_FILES['organization_logo']['error'] == UPLOAD_ERR_OK) {
+        $uploadDir = 'uploads/';
+        $uploadFile = $uploadDir . basename($_FILES['organization_logo']['name']);
+        if (move_uploaded_file($_FILES['organization_logo']['tmp_name'], $uploadFile)) {
+            $organization_logo = $uploadFile;
+        } else {
+            flashMessage('خطا در آپلود لوگو', 'danger');
+        }
+    }
+
+    // ذخیره تنظیمات در دیتابیس
     $db->update('settings', [
-        'company_name' => $companyName,
-        'address' => $address,
-        'phone' => $phone,
-        'email' => $email,
-        'currency' => $currency,
-        'tax_rate' => $taxRate,
-        'discount_rate' => $discountRate,
-        'invoice_template' => $invoiceTemplate,
-        'smtp_server' => $smtpServer,
-        'smtp_port' => $smtpPort,
-        'smtp_username' => $smtpUsername,
-        'smtp_password' => $smtpPassword
-    ]);
+        'organization_name' => $organization_name,
+        'organization_address' => $organization_address,
+        'organization_phone' => $organization_phone,
+        'organization_email' => $organization_email,
+        'organization_logo' => $organization_logo,
+    ], ['id' => 1]);
 
-    flashMessage('تنظیمات با موفقیت به‌روزرسانی شد', 'success');
+    flashMessage('تنظیمات با موفقیت ذخیره شد', 'success');
     header('Location: settings.php');
     exit;
 }
+
+// دریافت تنظیمات فعلی
+$settings = $db->get('settings', '*', ['id' => 1]);
+
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تنظیمات - <?php echo SITE_NAME; ?></title>
+    <title>تنظیمات عمومی - <?php echo SITE_NAME; ?></title>
     <link href="assets/css/fontiran.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0/css/select2.min.css">
 </head>
 <body>
     <div class="d-flex">
@@ -56,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -67,67 +76,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header card-header-primary">
-                                <h4 class="card-title">تنظیمات</h4>
-                                <p class="card-category">مدیریت تنظیمات عمومی</p>
+                                <h4 class="card-title">تنظیمات عمومی</h4>
+                                <p class="card-category">مدیریت تنظیمات عمومی سیستم</p>
                             </div>
                             <div class="card-body">
-                                <form method="post" action="">
+                                <form method="post" action="" enctype="multipart/form-data">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label class="bmd-label-floating">نام شرکت</label>
-                                                <input type="text" name="company_name" class="form-control" value="<?php echo htmlspecialchars($settings['company_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">آدرس</label>
-                                                <input type="text" name="address" class="form-control" value="<?php echo htmlspecialchars($settings['address'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">شماره تماس</label>
-                                                <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($settings['phone'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">ایمیل</label>
-                                                <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($settings['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                                <label for="organization_name">نام سازمان</label>
+                                                <input type="text" name="organization_name" id="organization_name" class="form-control" value="<?php echo htmlspecialchars($settings['organization_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label class="bmd-label-floating">واحد پولی</label>
-                                                <input type="text" name="currency" class="form-control" value="<?php echo htmlspecialchars($settings['currency'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">نرخ مالیات</label>
-                                                <input type="text" name="tax_rate" class="form-control" value="<?php echo htmlspecialchars($settings['tax_rate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">نرخ تخفیف</label>
-                                                <input type="text" name="discount_rate" class="form-control" value="<?php echo htmlspecialchars($settings['discount_rate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">قالب فاکتور</label>
-                                                <input type="text" name="invoice_template" class="form-control" value="<?php echo htmlspecialchars($settings['invoice_template'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">سرور SMTP</label>
-                                                <input type="text" name="smtp_server" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_server'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">پورت SMTP</label>
-                                                <input type="text" name="smtp_port" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_port'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">نام کاربری SMTP</label>
-                                                <input type="text" name="smtp_username" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="bmd-label-floating">رمز عبور SMTP</label>
-                                                <input type="password" name="smtp_password" class="form-control" value="<?php echo htmlspecialchars($settings['smtp_password'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                                <label for="organization_address">آدرس</label>
+                                                <input type="text" name="organization_address" id="organization_address" class="form-control" value="<?php echo htmlspecialchars($settings['organization_address'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="submit" class="btn btn-primary pull-right">ذخیره تنظیمات</button>
-                                    <div class="clearfix"></div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="organization_phone">شماره تماس</label>
+                                                <input type="text" name="organization_phone" id="organization_phone" class="form-control" value="<?php echo htmlspecialchars($settings['organization_phone'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="organization_email">ایمیل</label>
+                                                <input type="email" name="organization_email" id="organization_email" class="form-control" value="<?php echo htmlspecialchars($settings['organization_email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="organization_logo">لوگو</label>
+                                                <input type="file" name="organization_logo" id="organization_logo" class="form-control">
+                                                <?php if (!empty($settings['organization_logo'])): ?>
+                                                    <img src="<?php echo $settings['organization_logo']; ?>" alt="لوگو سازمان" class="img-thumbnail mt-3" width="100">
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-primary">ذخیره تنظیمات</button>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -139,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0/js/select2.min.js"></script>
     <script src="assets/js/dashboard.js"></script>
 </body>
 </html>

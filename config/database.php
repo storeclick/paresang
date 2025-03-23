@@ -55,14 +55,41 @@ class Database {
 
     public function update($table, $data, $where) {
         $fields = implode('=?,', array_keys($data)) . '=?';
-        $sql = "UPDATE {$table} SET {$fields} WHERE {$where}";
         
-        return $this->query($sql, array_values($data));
+        $conditions = [];
+        $params = [];
+        foreach ($where as $column => $value) {
+            $conditions[] = "$column = ?";
+            $params[] = $value;
+        }
+        $sql = "UPDATE {$table} SET {$fields} WHERE " . implode(' AND ', $conditions);
+        
+        return $this->query($sql, array_merge(array_values($data), $params));
     }
 
     public function delete($table, $where, $params = []) {
         $sql = "DELETE FROM {$table} WHERE {$where}";
         return $this->query($sql, $params);
+    }
+
+    public function get($table, $columns = '*', $where = []) {
+        $sql = "SELECT $columns FROM $table";
+
+        if (!empty($where)) {
+            $conditions = [];
+            foreach ($where as $column => $value) {
+                $conditions[] = "$column = :$column";
+            }
+            $sql .= " WHERE " . implode(' AND ', $conditions);
+        }
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($where as $column => $value) {
+            $stmt->bindValue(":$column", $value);
+        }
+
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function lastInsertId() {
