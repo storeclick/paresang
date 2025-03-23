@@ -59,164 +59,173 @@ $(document).ready(function() {
     });
 
     // نمودار فروش
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    let salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'فروش',
-                data: [],
-                borderColor: '#4e73df',
-                tension: 0.3,
-                fill: true,
-                backgroundColor: 'rgba(78, 115, 223, 0.05)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+        const ctx2d = ctx.getContext('2d');
+        let salesChart = new Chart(ctx2d, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'فروش',
+                    data: [],
+                    borderColor: '#4e73df',
+                    tension: 0.3,
+                    fill: true,
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)'
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        drawBorder: false
-                    }
-                },
-                x: {
-                    grid: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
                         display: false
                     }
-                }
-            }
-        }
-    });
-
-    // دریافت داده‌های نمودار
-    function updateChart(period = 'week') {
-        $.ajax({
-            url: 'ajax/get-sales-data.php',
-            data: { period: period },
-            success: function(response) {
-                salesChart.data.labels = response.labels;
-                salesChart.data.datasets[0].data = response.data;
-                salesChart.update();
-            }
-        });
-    }
-
-    // تغییر دوره زمانی نمودار
-    $('.btn-group .btn').click(function() {
-        $('.btn-group .btn').removeClass('active');
-        $(this).addClass('active');
-        updateChart($(this).data('period'));
-    });
-
-    // بارگذاری اولیه نمودار
-    updateChart();
-
-    // نمودار نقدینگی
-    const ctxCashFlow = document.getElementById('cashFlowChart').getContext('2d');
-    let cashFlowChart = new Chart(ctxCashFlow, {
-        type: 'line',
-        data: {
-            labels: [], // برچسب‌های زمانی
-            datasets: [{
-                label: 'نقدینگی',
-                data: [], // داده‌های نقدینگی
-                borderColor: '#1cc88a',
-                tension: 0.3,
-                fill: true,
-                backgroundColor: 'rgba(28, 200, 138, 0.05)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        drawBorder: false
-                    }
                 },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
-
-    // دریافت داده‌های نمودار نقدینگی
-    function updateCashFlowChart() {
-        $.ajax({
-            url: 'ajax/get-cash-flow-data.php',
-            success: function(response) {
-                cashFlowChart.data.labels = response.labels;
-                cashFlowChart.data.datasets[0].data = response.data;
-                cashFlowChart.update();
-            }
-        });
-    }
-
-    // بارگذاری اولیه نمودار نقدینگی
-    updateCashFlowChart();
-
-    // نمودار درآمد و هزینه‌ها
-    const ctxIncomeExpense = document.getElementById('incomeExpenseChart').getContext('2d');
-    let incomeExpenseChart = new Chart(ctxIncomeExpense, {
-        type: 'pie',
-        data: {
-            labels: ['درآمد', 'هزینه‌ها'],
-            datasets: [{
-                label: 'مقدار',
-                data: [], // داده‌های درآمد و هزینه‌ها
-                backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)'],
-                borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            return tooltipItem.label + ': ' + tooltipItem.raw + ' تومان';
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
                         }
                     }
                 }
             }
-        }
-    });
-
-    // دریافت داده‌های نمودار درآمد و هزینه‌ها
-    function updateIncomeExpenseChart() {
-        $.ajax({
-            url: 'ajax/get-income-expense-data.php',
-            success: function(response) {
-                incomeExpenseChart.data.labels = response.labels;
-                incomeExpenseChart.data.datasets[0].data = response.data;
-                incomeExpenseChart.update();
-            }
         });
+
+        // دریافت داده‌های نمودار
+        function updateChart(period = 'week') {
+            $.ajax({
+                url: 'ajax/get-sales-data.php',
+                data: { period: period },
+                success: function(response) {
+                    salesChart.data.labels = response.labels;
+                    salesChart.data.datasets[0].data = response.data;
+                    salesChart.update();
+                }
+            });
+        }
+
+        // تغییر دوره زمانی نمودار
+        $('.btn-group .btn').click(function() {
+            $('.btn-group .btn').removeClass('active');
+            $(this).addClass('active');
+            updateChart($(this).data('period'));
+        });
+
+        // بارگذاری اولیه نمودار
+        updateChart();
     }
 
-    // بارگذاری اولیه نمودار درآمد و هزینه‌ها
-    updateIncomeExpenseChart();
+    // نمودار نقدینگی
+    const ctxCashFlow = document.getElementById('cashFlowChart');
+    if (ctxCashFlow) {
+        const ctxCashFlow2d = ctxCashFlow.getContext('2d');
+        let cashFlowChart = new Chart(ctxCashFlow2d, {
+            type: 'line',
+            data: {
+                labels: [], // برچسب‌های زمانی
+                datasets: [{
+                    label: 'نقدینگی',
+                    data: [], // داده‌های نقدینگی
+                    borderColor: '#1cc88a',
+                    tension: 0.3,
+                    fill: true,
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // دریافت داده‌های نمودار نقدینگی
+        function updateCashFlowChart() {
+            $.ajax({
+                url: 'ajax/get-cash-flow-data.php',
+                success: function(response) {
+                    cashFlowChart.data.labels = response.labels;
+                    cashFlowChart.data.datasets[0].data = response.data;
+                    cashFlowChart.update();
+                }
+            });
+        }
+
+        // بارگذاری اولیه نمودار نقدینگی
+        updateCashFlowChart();
+    }
+
+    // نمودار درآمد و هزینه‌ها
+    const ctxIncomeExpense = document.getElementById('incomeExpenseChart');
+    if (ctxIncomeExpense) {
+        const ctxIncomeExpense2d = ctxIncomeExpense.getContext('2d');
+        let incomeExpenseChart = new Chart(ctxIncomeExpense2d, {
+            type: 'pie',
+            data: {
+                labels: ['درآمد', 'هزینه‌ها'],
+                datasets: [{
+                    label: 'مقدار',
+                    data: [], // داده‌های درآمد و هزینه‌ها
+                    backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+                    borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + ' تومان';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // دریافت داده‌های نمودار درآمد و هزینه‌ها
+        function updateIncomeExpenseChart() {
+            $.ajax({
+                url: 'ajax/get-income-expense-data.php',
+                success: function(response) {
+                    incomeExpenseChart.data.labels = response.labels;
+                    incomeExpenseChart.data.datasets[0].data = response.data;
+                    incomeExpenseChart.update();
+                }
+            });
+        }
+
+        // بارگذاری اولیه نمودار درآمد و هزینه‌ها
+        updateIncomeExpenseChart();
+    }
 });
