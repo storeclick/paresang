@@ -85,6 +85,45 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
     <link rel="stylesheet" href="assets/css/products.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" />
+    <style>
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .alert {
+            border-radius: 8px;
+        }
+        .hint-text {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .product-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .table-responsive {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <div class="d-flex">
@@ -92,7 +131,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -124,13 +163,8 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                             </div>
 
                             <div class="col-md-3">
-                                <select name="category" class="form-select">
+                                <select name="category" class="form-select search-category">
                                     <option value="0">همه دسته‌بندی‌ها</option>
-                                    <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat['id']; ?>" <?php echo $category == $cat['id'] ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['name']); ?>
-                                        </option>
-                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
@@ -263,6 +297,14 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                     ?>
                 </div>
                 <?php endif; ?>
+
+                <!-- دکمه خروجی اکسل -->
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="button" class="btn btn-success" id="export-excel">
+                        <i class="fas fa-file-excel me-1"></i>
+                        خروجی اکسل
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -280,7 +322,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
                     <p class="text-danger small">این عملیات قابل بازگشت نیست!</p>
                 </div>
                 <div class="modal-footer">
-                    <form action="ajax/delete-product.php" method="POST">
+                    <form id="deleteProductForm">
                         <input type="hidden" name="product_id" id="productId">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
                         <button type="submit" class="btn btn-danger">حذف</button>
@@ -292,20 +334,81 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetchAll();
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
-    // فعال‌سازی tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    $(document).ready(function() {
+        // فعال‌سازی tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
-    // مدیریت حذف محصول
-    $('.delete-product').click(function() {
-        const id = $(this).data('id');
-        const name = $(this).data('name');
-        $('#productId').val(id);
-        $('#productName').text(name);
-        $('#deleteModal').modal('show');
+        // مدیریت حذف محصول
+        $('.delete-product').click(function() {
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            $('#productId').val(id);
+            $('#productName').text(name);
+            $('#deleteModal').modal('show');
+        });
+
+        // حذف محصول
+        $('#deleteProductForm').submit(function(e) {
+            e.preventDefault();
+            const id = $('#productId').val();
+
+            $.ajax({
+                url: 'ajax/delete-product.php',
+                type: 'POST',
+                data: { product_id: id },
+                success: function(response) {
+                    const res = JSON.parse(response);
+                    if (res.success) {
+                        location.reload();
+                    } else {
+                        alert(res.error);
+                    }
+                },
+                error: function() {
+                    alert('خطا در حذف محصول. لطفاً دوباره تلاش کنید.');
+                }
+            });
+        });
+
+        // جستجو و انتخاب دسته‌بندی‌ها
+        $('.search-category').select2({
+            placeholder: 'دسته‌بندی را انتخاب کنید',
+            allowClear: true,
+            ajax: {
+                url: 'search-categories.php',
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return {
+                                id: item.id,
+                                text: item.name
+                            };
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
+
+        // خروجی اکسل
+        $('#export-excel').click(function() {
+            const table = $('.table').get(0);
+            const wb = XLSX.utils.table_to_book(table, {sheet: "محصولات"});
+            XLSX.writeFile(wb, "products.xlsx");
+        });
     });
     </script>
 </body>

@@ -10,6 +10,14 @@ $db = Database::getInstance();
 $error = '';
 $success = '';
 
+function generateProductCode($db) {
+    do {
+        $code = rand(100000, 999999);
+        $stmt = $db->query("SELECT id FROM products WHERE code = ?", [$code]);
+    } while ($stmt->rowCount() > 0);
+    return $code;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = sanitize($_POST['name']);
     $code = sanitize($_POST['code']);
@@ -172,8 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="code">کد محصول <span class="text-danger">*</span></label>
-                                    <input type="text" id="code" name="code" class="form-control" required>
-                                    <small class="hint-text">مثال: LP-12345</small>
+                                    <div class="input-group">
+                                        <input type="text" id="code" name="code" class="form-control" required>
+                                        <button type="button" id="generate-code" class="btn btn-outline-secondary">تولید کد</button>
+                                    </div>
+                                    <small class="hint-text">مثال: 123456</small>
                                 </div>
                             </div>
                             
@@ -315,30 +326,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css" rel="stylesheet" />
     <script>
         $(document).ready(function() {
-            $('.search-category').select2({
-                placeholder: 'دسته‌بندی را انتخاب کنید',
-                allowClear: true,
-                ajax: {
-                    url: 'search-categories.php',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: params.term
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: $.map(data, function (item) {
-                                return {
-                                    id: item.id,
-                                    text: item.name
-                                };
-                            })
-                        };
-                    },
-                    cache: true
-                }
+            function generateRandomCode() {
+                return Math.floor(100000 + Math.random() * 900000);
+            }
+
+            $('#generate-code').click(function() {
+                $('#code').val(generateRandomCode());
             });
 
             $('#scan-barcode').click(function() {
@@ -372,6 +365,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     });
                 } else {
                     alert('لطفاً دسته‌بندی را انتخاب کنید.');
+                }
+            });
+
+            // Generate product code automatically when the page loads
+            $('#code').val(generateRandomCode());
+
+            $('.search-category').select2({
+                placeholder: 'دسته‌بندی را انتخاب کنید',
+                allowClear: true,
+                ajax: {
+                    url: 'search-categories.php',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: $.map(data, function (item) {
+                                return {
+                                    id: item.id,
+                                    text: item.name
+                                };
+                            })
+                        };
+                    },
+                    cache: true
                 }
             });
         });
