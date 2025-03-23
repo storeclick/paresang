@@ -64,8 +64,20 @@ $recentInvoices = $db->query(
     <link href="assets/css/fontiran.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/charts.css/dist/charts.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .table-responsive {
+            max-height: 400px; 
+            overflow-y: auto; 
+        }
+    </style>
 </head>
 <body>
     <div class="d-flex">
@@ -73,7 +85,7 @@ $recentInvoices = $db->query(
         <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content w-100">
             <!-- Top Navbar -->
             <?php include 'includes/navbar.php'; ?>
 
@@ -163,7 +175,9 @@ $recentInvoices = $db->query(
                                 </div>
                             </div>
                             <div class="card-body">
-                                <canvas id="salesChart" height="300"></canvas>
+                                <div class="chart-container">
+                                    <canvas id="salesChart"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -246,8 +260,37 @@ $recentInvoices = $db->query(
                             </div>
                         </div>
                     </div>
+
+                    <!-- نمودار نقدینگی -->
+                    <div class="col-xl-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">نمودار نقدینگی</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="cashFlowChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- نمودار درآمد و هزینه‌ها -->
+                    <div class="col-xl-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">درآمد و هزینه‌ها</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="incomeExpenseChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+            <?php include 'includes/footer.php'; ?>
         </div>
     </div>
 
@@ -316,6 +359,106 @@ $recentInvoices = $db->query(
 
     // بارگذاری اولیه نمودار
     updateChart();
+
+    // نمودار نقدینگی
+    const ctxCashFlow = document.getElementById('cashFlowChart').getContext('2d');
+    let cashFlowChart = new Chart(ctxCashFlow, {
+        type: 'line',
+        data: {
+            labels: [], // برچسب‌های زمانی
+            datasets: [{
+                label: 'نقدینگی',
+                data: [], // داده‌های نقدینگی
+                borderColor: '#1cc88a',
+                tension: 0.3,
+                fill: true,
+                backgroundColor: 'rgba(28, 200, 138, 0.05)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // دریافت داده‌های نمودار نقدینگی
+    function updateCashFlowChart() {
+        $.ajax({
+            url: 'ajax/get-cash-flow-data.php',
+            success: function(response) {
+                cashFlowChart.data.labels = response.labels;
+                cashFlowChart.data.datasets[0].data = response.data;
+                cashFlowChart.update();
+            }
+        });
+    }
+
+    // بارگذاری اولیه نمودار نقدینگی
+    updateCashFlowChart();
+
+    // نمودار درآمد و هزینه‌ها
+    const ctxIncomeExpense = document.getElementById('incomeExpenseChart').getContext('2d');
+    let incomeExpenseChart = new Chart(ctxIncomeExpense, {
+        type: 'pie',
+        data: {
+            labels: ['درآمد', 'هزینه‌ها'],
+            datasets: [{
+                label: 'مقدار',
+                data: [], // داده‌های درآمد و هزینه‌ها
+                backgroundColor: ['rgba(54, 162, 235, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+                borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return tooltipItem.label + ': ' + tooltipItem.raw + ' تومان';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // دریافت داده‌های نمودار درآمد و هزینه‌ها
+    function updateIncomeExpenseChart() {
+        $.ajax({
+            url: 'ajax/get-income-expense-data.php',
+            success: function(response) {
+                incomeExpenseChart.data.labels = response.labels;
+                incomeExpenseChart.data.datasets[0].data = response.data;
+                incomeExpenseChart.update();
+            }
+        });
+    }
+
+    // بارگذاری اولیه نمودار درآمد و هزینه‌ها
+    updateIncomeExpenseChart();
     </script>
 </body>
 </html>

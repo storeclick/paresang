@@ -41,10 +41,16 @@ if (isset($_POST['create_excel_backup'])) {
         if ($zip->open($backupFile, ZipArchive::CREATE) === TRUE) {
             $excelFiles = glob('path_to_excel_files/*.xlsx'); // مسیر فایل‌های اکسل
             foreach ($excelFiles as $file) {
-                $zip->addFile($file, basename($file));
+                if (file_exists($file)) {
+                    $zip->addFile($file, basename($file));
+                }
             }
             $zip->close();
-            flashMessage('پشتیبان فایل‌های اکسل با موفقیت ایجاد شد', 'success');
+            if (file_exists($backupFile)) {
+                flashMessage('پشتیبان فایل‌های اکسل با موفقیت ایجاد شد', 'success');
+            } else {
+                flashMessage('خطا در ایجاد پشتیبان فایل‌های اکسل: فایل ZIP ایجاد نشد', 'danger');
+            }
         } else {
             flashMessage('خطا در ایجاد پشتیبان فایل‌های اکسل', 'danger');
         }
