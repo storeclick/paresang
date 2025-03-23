@@ -1,6 +1,6 @@
 <?php
 require_once 'includes/init.php';
-require_once 'includes/jdf.php';
+require_once 'includes/jdf.php'; // اطمینان حاصل کنید که فایل jdf.php به درستی وارد شده است
 
 // بررسی وضعیت لاگین کاربر
 if (!$auth->isLoggedIn()) {
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['transaction'])) {
                                                 <td><?php echo $transaction['product_name']; ?></td>
                                                 <td><?php echo $transaction['type'] == 'in' ? 'افزودن به انبار' : 'حذف از انبار'; ?></td>
                                                 <td><?php echo $transaction['quantity']; ?></td>
-                                                <td><?php echo jDate::jdate('Y/m/d H:i:s', strtotime($transaction['created_at'])); ?></td>
+                                                <td><?php echo jdate('Y/m/d H:i:s', strtotime($transaction['created_at'])); ?></td> <!-- استفاده از تابع jdate -->
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>

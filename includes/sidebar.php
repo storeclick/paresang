@@ -72,6 +72,13 @@
         </li>
         
         <li class="nav-item">
+            <a href="customers.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'customers.php' ? 'active' : ''; ?>">
+                <i class="fas fa-users"></i>
+                مدیریت مشتریان
+            </a>
+        </li>
+        
+        <li class="nav-item">
             <a href="#settingsSubmenu" class="nav-link" data-bs-toggle="collapse">
                 <i class="fas fa-cog"></i>
                 تنظیمات
